@@ -1,0 +1,344 @@
+{% extends "base.html" %}
+
+{% block title %}{{ zone.name }} - Smart City Monitor{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <a href="{{ url_for('dashboard') }}" class="btn btn-outline-primary">
+        <i class="bi bi-arrow-left"></i> Back to Dashboard
+    </a>
+</div>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-8">
+                <h2 class="card-title">
+                    <i class="bi bi-geo-alt"></i> {{ zone.name }}
+                </h2>
+                <p class="text-muted">{{ zone.description }}</p>
+                {% if zone.latitude and zone.longitude %}
+                <p class="small text-muted mb-0">
+                    <i class="bi bi-pin-map"></i> 
+                    Coordinates: {{ zone.latitude }}, {{ zone.longitude }}
+                </p>
+                {% endif %}
+            </div>
+            
+            <div class="col-md-4">
+                {% if latest %}
+                <div class="text-center">
+                    <h5>Current Status</h5>
+                    <span class="badge bg-{{ status.color }} p-3 fs-6">
+                        {{ status.level }}
+                    </span>
+                    <div class="mt-2">
+                        <div class="h3 mb-0">{{ latest.pm25 }} <small>µg/m³</small></div>
+                        <small class="text-muted">PM2.5</small>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if weather and not weather.error %}
+                <div class="card mt-3">
+                    <div class="card-body text-center">
+                        <h6 class="card-title">Current Weather</h6>
+                        <div class="h3 mb-0">
+                            {{ weather.current.temperature_2m if weather.current.temperature_2m is defined else '-' }} °C
+                        </div>
+                        <small class="text-muted">Open-Meteo</small>
+                        <div class="mt-3">
+                            <canvas id="weatherTempChart" height="120"></canvas>
+                        </div>
+                    </div>
+                </div>
+                {% elif weather and weather.error %}
+                <div class="alert alert-warning mt-3" role="alert">
+                    Weather data unavailable: {{ weather.message }}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Current Metrics -->
+{% if latest %}
+<div class="row g-3 mb-4">
+    <div class="col-md-3 col-sm-6">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="bi bi-wind text-primary" style="font-size: 2rem;"></i>
+                <h3 class="mt-2">{{ latest.pm25 }}</h3>
+                <p class="text-muted mb-0">PM2.5 (µg/m³)</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 col-sm-6">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="bi bi-cloud text-info" style="font-size: 2rem;"></i>
+                <h3 class="mt-2">{{ latest.pm10 }}</h3>
+                <p class="text-muted mb-0">PM10 (µg/m³)</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 col-sm-6">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="bi bi-volume-up text-warning" style="font-size: 2rem;"></i>
+                <h3 class="mt-2">{{ latest.noise_level }}</h3>
+                <p class="text-muted mb-0">Noise (dB)</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 col-sm-6">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="bi bi-thermometer-half text-danger" style="font-size: 2rem;"></i>
+                <h3 class="mt-2">{{ latest.temperature }}</h3>
+                <p class="text-muted mb-0">Temperature (°C)</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Historical Charts -->
+<div class="row mb-4">
+    <div class="col-lg-6 mb-3">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">PM2.5 Over Time</h5>
+                <canvas id="pm25TimeChart"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-6 mb-3">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">PM10 Over Time</h5>
+                <canvas id="pm10TimeChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-lg-6 mb-3">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Noise Level Over Time</h5>
+                <canvas id="noiseTimeChart"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-6 mb-3">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Temperature Over Time</h5>
+                <canvas id="tempTimeChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Readings Table -->
+<div class="card">
+    <div class="card-body">
+        <h5 class="card-title">Recent Readings</h5>
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Timestamp</th>
+                        <th>PM2.5 (µg/m³)</th>
+                        <th>PM10 (µg/m³)</th>
+                        <th>Noise (dB)</th>
+                        <th>Temp (°C)</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for reading in readings|reverse %}
+                    <tr>
+                        <td>{{ reading.timestamp.strftime('%Y-%m-%d %H:%M') }}</td>
+                        <td>{{ reading.pm25 }}</td>
+                        <td>{{ reading.pm10 }}</td>
+                        <td>{{ reading.noise_level }}</td>
+                        <td>{{ reading.temperature }}</td>
+                        <td>
+                            {% set read_status = reading.pm25 | aqi_status %}
+                            <span class="badge bg-{{ read_status.color }}">
+                                {{ read_status.level }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Prepare time series data
+const timestamps = {{ readings | map(attribute='timestamp') | map('string') | list | tojson }};
+const timeLabels = timestamps.map(t => {
+    const date = new Date(t);
+    return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+});
+
+const pm25Data = {{ readings | map(attribute='pm25') | list | tojson }};
+const pm10Data = {{ readings | map(attribute='pm10') | list | tojson }};
+const noiseData = {{ readings | map(attribute='noise_level') | list | tojson }};
+const tempData = {{ readings | map(attribute='temperature') | list | tojson }};
+
+// Chart configuration
+const commonOptions = {
+    responsive: true,
+    maintainAspectRatio: true,
+    scales: {
+        y: {
+            beginAtZero: true
+        },
+        x: {
+            ticks: {
+                maxRotation: 45,
+                minRotation: 45
+            }
+        }
+    },
+    plugins: {
+        legend: {
+            display: false
+        }
+    }
+};
+
+// PM2.5 Time Chart
+const pm25TimeCtx = document.getElementById('pm25TimeChart').getContext('2d');
+new Chart(pm25TimeCtx, {
+    type: 'line',
+    data: {
+        labels: timeLabels,
+        datasets: [{
+            label: 'PM2.5 (µg/m³)',
+            data: pm25Data,
+            borderColor: 'rgba(255, 99, 132, 1)',
+            backgroundColor: 'rgba(255, 99, 132, 0.1)',
+            tension: 0.4,
+            fill: true
+        }]
+    },
+    options: commonOptions
+});
+
+// PM10 Time Chart
+const pm10TimeCtx = document.getElementById('pm10TimeChart').getContext('2d');
+new Chart(pm10TimeCtx, {
+    type: 'line',
+    data: {
+        labels: timeLabels,
+        datasets: [{
+            label: 'PM10 (µg/m³)',
+            data: pm10Data,
+            borderColor: 'rgba(75, 192, 192, 1)',
+            backgroundColor: 'rgba(75, 192, 192, 0.1)',
+            tension: 0.4,
+            fill: true
+        }]
+    },
+    options: commonOptions
+});
+
+// Noise Level Time Chart
+const noiseTimeCtx = document.getElementById('noiseTimeChart').getContext('2d');
+new Chart(noiseTimeCtx, {
+    type: 'line',
+    data: {
+        labels: timeLabels,
+        datasets: [{
+            label: 'Noise Level (dB)',
+            data: noiseData,
+            borderColor: 'rgba(255, 206, 86, 1)',
+            backgroundColor: 'rgba(255, 206, 86, 0.1)',
+            tension: 0.4,
+            fill: true
+        }]
+    },
+    options: commonOptions
+});
+
+// Temperature Time Chart
+const tempTimeCtx = document.getElementById('tempTimeChart').getContext('2d');
+new Chart(tempTimeCtx, {
+    type: 'line',
+    data: {
+        labels: timeLabels,
+        datasets: [{
+            label: 'Temperature (°C)',
+            data: tempData,
+            borderColor: 'rgba(153, 102, 255, 1)',
+            backgroundColor: 'rgba(153, 102, 255, 0.1)',
+            tension: 0.4,
+            fill: true
+        }]
+    },
+    options: commonOptions
+});
+
+// Weather chart (Open-Meteo)
+{% if weather and not weather.error %}
+const weatherHourly = {{ weather.hourly | tojson }};
+const weatherLabels = weatherHourly.map(h => {
+    const d = new Date(h.time);
+    return d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+});
+const weatherTemp = weatherHourly.map(h => h.temperature_2m);
+const weatherRh = weatherHourly.map(h => h.relativehumidity_2m);
+
+const weatherCtx = document.getElementById('weatherTempChart').getContext('2d');
+new Chart(weatherCtx, {
+    type: 'line',
+    data: {
+        labels: weatherLabels,
+        datasets: [
+            {
+                label: 'Temperature (°C)',
+                data: weatherTemp,
+                borderColor: 'rgba(153, 102, 255, 1)',
+                backgroundColor: 'rgba(153, 102, 255, 0.1)',
+                tension: 0.3,
+                fill: false
+            },
+            {
+                label: 'Relative Humidity (%)',
+                data: weatherRh,
+                borderColor: 'rgba(54, 162, 235, 1)',
+                backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                tension: 0.3,
+                fill: false,
+                yAxisID: 'y1'
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        interaction: { mode: 'index', intersect: false },
+        scales: {
+            y: { type: 'linear', position: 'left' },
+            y1: { type: 'linear', position: 'right', grid: { drawOnChartArea: false } }
+        }
+    }
+});
+{% endif %}
+</script>
+{% endblock %}

@@ -1,0 +1,379 @@
+{% extends "base.html" %}
+
+{% block title %}Statistics & Insights - Smart City Monitor{% endblock %}
+
+{% block content %}
+<!-- Page Header with Breadcrumb -->
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Overview</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Statistics & Insights</li>
+    </ol>
+</nav>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1><i class="bi bi-bar-chart-line"></i> Statistics & Insights</h1>
+        <p class="text-muted mb-0">Visual analytics and comparisons across all monitored zones</p>
+    </div>
+    <div>
+        <span class="badge bg-secondary fs-6">
+            <i class="bi bi-geo-alt"></i> {{ stats.total_zones }} Zones
+        </span>
+    </div>
+</div>
+
+{% if zone_data %}
+
+<!-- Row 1: Simulated vs Real-Time Comparison -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-arrow-left-right"></i> Simulated vs Real-Time Comparison</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-lg-8">
+                        <canvas id="simRealChart" height="300"></canvas>
+                    </div>
+                    <div class="col-lg-4">
+                        <div class="card bg-light h-100">
+                            <div class="card-body">
+                                <h6 class="card-subtitle mb-3 text-muted">Summary</h6>
+                                <div class="d-flex justify-content-between mb-3">
+                                    <div class="text-center">
+                                        <span class="h3 text-primary d-block">{{ stats.avg_sim_pm25 }}</span>
+                                        <small class="text-muted">Avg Simulated PM2.5</small>
+                                    </div>
+                                    <div class="text-center">
+                                        <span class="h3 text-danger d-block">{{ stats.real_pm25 if stats.real_pm25 else 'N/A' }}</span>
+                                        <small class="text-muted">Real-Time PM2.5</small>
+                                    </div>
+                                </div>
+                                <hr>
+                                <div class="alert alert-info py-2 mb-0">
+                                    <i class="bi bi-info-circle"></i>
+                                    <small><strong>Data Sources:</strong><br>
+                                    • Real-time data from Open-Meteo API<br>
+                                    • Simulated data generated locally<br>
+                                    • Noise is always simulated (no public API)</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Row 2: Zone Trends & EPA Categories -->
+<div class="row mb-4">
+    <!-- Zone Trend Distribution -->
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-graph-up-arrow"></i> Zone Trend Distribution</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <canvas id="trendChart" height="200"></canvas>
+                    </div>
+                    <div class="col-md-6 d-flex flex-column justify-content-center">
+                        <div class="mb-3">
+                            <span class="badge bg-danger fs-6 p-2 me-2">
+                                <i class="bi bi-caret-up-fill"></i> {{ stats.trend_counts.Increasing }}
+                            </span>
+                            <span>Increasing</span>
+                            <small class="text-muted d-block">Pollution levels rising</small>
+                        </div>
+                        <div class="mb-3">
+                            <span class="badge bg-success fs-6 p-2 me-2">
+                                <i class="bi bi-caret-down-fill"></i> {{ stats.trend_counts.Decreasing }}
+                            </span>
+                            <span>Decreasing</span>
+                            <small class="text-muted d-block">Pollution levels falling</small>
+                        </div>
+                        <div>
+                            <span class="badge bg-secondary fs-6 p-2 me-2">
+                                <i class="bi bi-dash-lg"></i> {{ stats.trend_counts.Stable }}
+                            </span>
+                            <span>Stable</span>
+                            <small class="text-muted d-block">Less than 1% change</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- EPA Category Breakdown -->
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-pie-chart"></i> EPA Air Quality Categories</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <canvas id="epaChart" height="200"></canvas>
+                    </div>
+                    <div class="col-md-6 d-flex flex-column justify-content-center">
+                        <div class="mb-3">
+                            <span class="badge bg-success fs-6 p-2 me-2">{{ stats.epa_counts.Good }}</span>
+                            <span>Good</span>
+                            <small class="text-muted d-block">PM2.5 ≤ 12 µg/m³</small>
+                        </div>
+                        <div class="mb-3">
+                            <span class="badge bg-warning text-dark fs-6 p-2 me-2">{{ stats.epa_counts.Moderate }}</span>
+                            <span>Moderate</span>
+                            <small class="text-muted d-block">PM2.5 12–35 µg/m³</small>
+                        </div>
+                        <div>
+                            <span class="badge bg-danger fs-6 p-2 me-2">{{ stats.epa_counts.Unhealthy }}</span>
+                            <span>Unhealthy</span>
+                            <small class="text-muted d-block">PM2.5 > 35 µg/m³</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Row 3: Highest vs Lowest Zones -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-arrows-expand"></i> Highest vs Lowest Pollution Zones</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% if highest_zone %}
+                    <div class="col-md-6">
+                        <div class="card border-danger h-100">
+                            <div class="card-body text-center">
+                                <i class="bi bi-arrow-up-circle text-danger" style="font-size: 3rem;"></i>
+                                <h2 class="mt-3 text-danger">{{ highest_zone.reading.pm25 }} <small class="text-muted">µg/m³</small></h2>
+                                <h4>{{ highest_zone.zone.name }}</h4>
+                                <p class="text-muted">{{ highest_zone.zone.description }}</p>
+                                <span class="badge bg-{{ highest_zone.status.color }} p-2">{{ highest_zone.status.level }}</span>
+                                <a href="{{ url_for('zone_detail', zone_id=highest_zone.zone.id) }}" class="btn btn-outline-danger btn-sm mt-3">
+                                    View Details <i class="bi bi-arrow-right"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if lowest_zone %}
+                    <div class="col-md-6">
+                        <div class="card border-success h-100">
+                            <div class="card-body text-center">
+                                <i class="bi bi-arrow-down-circle text-success" style="font-size: 3rem;"></i>
+                                <h2 class="mt-3 text-success">{{ lowest_zone.reading.pm25 }} <small class="text-muted">µg/m³</small></h2>
+                                <h4>{{ lowest_zone.zone.name }}</h4>
+                                <p class="text-muted">{{ lowest_zone.zone.description }}</p>
+                                <span class="badge bg-{{ lowest_zone.status.color }} p-2">{{ lowest_zone.status.level }}</span>
+                                <a href="{{ url_for('zone_detail', zone_id=lowest_zone.zone.id) }}" class="btn btn-outline-success btn-sm mt-3">
+                                    View Details <i class="bi bi-arrow-right"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Row 4: PM2.5 & PM10 by Zone Charts -->
+<div class="row mb-4">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-wind"></i> PM2.5 Levels by Zone</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="pm25Chart" height="250"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-cloud"></i> PM10 Levels by Zone</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="pm10Chart" height="250"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% else %}
+<div class="alert alert-info" role="alert">
+    <i class="bi bi-info-circle"></i> No pollution data available yet. 
+    <a href="{{ url_for('simulate') }}" class="alert-link">Simulate data</a> to generate sample readings.
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+{% if zone_data %}
+<script>
+// Prepare data
+const zoneNames = {{ zone_data | map(attribute='zone.name') | list | tojson }};
+const pm25Values = {{ zone_data | map(attribute='reading.pm25') | list | tojson }};
+const pm10Values = {{ zone_data | map(attribute='reading.pm10') | list | tojson }};
+const realPm25 = {{ stats.real_pm25 if stats.real_pm25 else 'null' }};
+
+// Color function based on AQI
+const getColor = (value) => {
+    if (value <= 12) return 'rgba(40, 167, 69, 0.8)';
+    if (value <= 35) return 'rgba(255, 193, 7, 0.8)';
+    if (value <= 55) return 'rgba(253, 126, 20, 0.8)';
+    return 'rgba(220, 53, 69, 0.8)';
+};
+
+// Simulated vs Real-Time Chart
+const simRealCtx = document.getElementById('simRealChart').getContext('2d');
+new Chart(simRealCtx, {
+    type: 'bar',
+    data: {
+        labels: zoneNames,
+        datasets: [
+            {
+                label: 'Simulated PM2.5',
+                data: pm25Values,
+                backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            },
+            {
+                label: 'Real-Time PM2.5',
+                data: zoneNames.map(() => realPm25),
+                backgroundColor: 'rgba(255, 99, 132, 0.7)',
+                borderColor: 'rgba(255, 99, 132, 1)',
+                borderWidth: 1,
+                type: 'line',
+                fill: false,
+                tension: 0,
+                pointRadius: 0
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { position: 'top' },
+            tooltip: {
+                callbacks: {
+                    afterBody: function() {
+                        return 'Real-time data from Open-Meteo API\nSimulated data generated locally';
+                    }
+                }
+            }
+        },
+        scales: {
+            y: { beginAtZero: true, title: { display: true, text: 'PM2.5 (µg/m³)' } }
+        }
+    }
+});
+
+// Zone Trend Distribution Chart
+const trendCtx = document.getElementById('trendChart').getContext('2d');
+new Chart(trendCtx, {
+    type: 'doughnut',
+    data: {
+        labels: ['Increasing', 'Decreasing', 'Stable'],
+        datasets: [{
+            data: [{{ stats.trend_counts.Increasing }}, {{ stats.trend_counts.Decreasing }}, {{ stats.trend_counts.Stable }}],
+            backgroundColor: ['rgba(220, 53, 69, 0.8)', 'rgba(40, 167, 69, 0.8)', 'rgba(108, 117, 125, 0.8)'],
+            borderWidth: 2
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { display: false }
+        }
+    }
+});
+
+// EPA Category Chart
+const epaCtx = document.getElementById('epaChart').getContext('2d');
+new Chart(epaCtx, {
+    type: 'doughnut',
+    data: {
+        labels: ['Good', 'Moderate', 'Unhealthy'],
+        datasets: [{
+            data: [{{ stats.epa_counts.Good }}, {{ stats.epa_counts.Moderate }}, {{ stats.epa_counts.Unhealthy }}],
+            backgroundColor: ['rgba(40, 167, 69, 0.8)', 'rgba(255, 193, 7, 0.8)', 'rgba(220, 53, 69, 0.8)'],
+            borderWidth: 2
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { display: false }
+        }
+    }
+});
+
+// PM2.5 by Zone Chart
+const pm25Colors = pm25Values.map(v => getColor(v));
+const pm25Ctx = document.getElementById('pm25Chart').getContext('2d');
+new Chart(pm25Ctx, {
+    type: 'bar',
+    data: {
+        labels: zoneNames,
+        datasets: [{
+            label: 'PM2.5 (µg/m³)',
+            data: pm25Values,
+            backgroundColor: pm25Colors,
+            borderColor: pm25Colors.map(c => c.replace('0.8', '1')),
+            borderWidth: 2
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true } }
+    }
+});
+
+// PM10 by Zone Chart
+const pm10Colors = pm10Values.map(v => getColor(v / 1.5));
+const pm10Ctx = document.getElementById('pm10Chart').getContext('2d');
+new Chart(pm10Ctx, {
+    type: 'bar',
+    data: {
+        labels: zoneNames,
+        datasets: [{
+            label: 'PM10 (µg/m³)',
+            data: pm10Values,
+            backgroundColor: pm10Colors,
+            borderColor: pm10Colors.map(c => c.replace('0.8', '1')),
+            borderWidth: 2
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true } }
+    }
+});
+</script>
+{% endif %}
+{% endblock %}

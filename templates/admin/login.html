@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}Administrator Login - Smart City Monitor{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+        <div class="card shadow mt-5 border-danger">
+            <div class="card-header bg-danger text-white text-center py-3">
+                <i class="bi bi-shield-lock" style="font-size: 2.5rem;"></i>
+                <h4 class="mt-2 mb-0">Administrator Access</h4>
+            </div>
+            <div class="card-body p-5">
+                <div class="alert alert-warning py-2 mb-4">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    <small>This area is restricted to authorized administrators only.</small>
+                </div>
+
+                <form method="POST" action="{{ url_for('admin.admin_login') }}">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Admin Username</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-danger text-white">
+                                <i class="bi bi-person-badge"></i>
+                            </span>
+                            <input type="text" class="form-control" id="username" name="username" 
+                                   placeholder="Enter admin username" required autofocus>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="password" class="form-label">Admin Password</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-danger text-white">
+                                <i class="bi bi-key"></i>
+                            </span>
+                            <input type="password" class="form-control" id="password" name="password" 
+                                   placeholder="Enter admin password" required>
+                        </div>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-danger btn-lg">
+                            <i class="bi bi-shield-check"></i> Login as Administrator
+                        </button>
+                    </div>
+                </form>
+
+                <hr class="my-4">
+
+                <div class="text-center">
+                    <p class="mb-0 text-muted">Not an administrator?</p>
+                    <a href="{{ url_for('login') }}" class="text-decoration-none">
+                        <i class="bi bi-arrow-left"></i> Return to User Login
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center mt-3 text-muted">
+            <small>
+                <i class="bi bi-lock"></i> Secure administrative access only.
+                All actions are logged.
+            </small>
+        </div>
+    </div>
+</div>
+{% endblock %}

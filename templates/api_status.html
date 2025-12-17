@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+
+{% block title %}API Status - Smart City Monitor{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <a href="{{ url_for('dashboard') }}" class="btn btn-outline-primary">
+        <i class="bi bi-arrow-left"></i> Back to Dashboard
+    </a>
+</div>
+
+<h1 class="mb-4"><i class="bi bi-broadcast"></i> API Connection Status</h1>
+
+<!-- API Configuration Status -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">API Configuration</h5>
+                
+                <div class="mb-3">
+                    <strong>Status:</strong>
+                    {% if status.api_configured %}
+                        <span class="badge bg-success ms-2">
+                            <i class="bi bi-check-circle"></i> Configured
+                        </span>
+                    {% else %}
+                        <span class="badge bg-warning ms-2">
+                            <i class="bi bi-exclamation-triangle"></i> Not Configured
+                        </span>
+                    {% endif %}
+                </div>
+                
+                <div class="mb-3">
+                    <strong>API Key:</strong>
+                    <code class="ms-2">{{ status.api_key }}</code>
+                </div>
+                
+                <div class="mb-3">
+                    <strong>Default City:</strong>
+                    <span class="ms-2">{{ status.default_city }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Connection Test</h5>
+                
+                <div class="mb-3">
+                    <strong>Connection:</strong>
+                    {% if status.connection_test %}
+                        <span class="badge bg-success ms-2">
+                            <i class="bi bi-wifi"></i> Connected
+                        </span>
+                    {% else %}
+                        <span class="badge bg-danger ms-2">
+                            <i class="bi bi-wifi-off"></i> Failed
+                        </span>
+                    {% endif %}
+                </div>
+                
+                {% if status.connection_test %}
+                <div class="alert alert-success">
+                    <i class="bi bi-check-circle"></i> Successfully connected to OpenWeatherMap API!
+                </div>
+                {% else %}
+                <div class="alert alert-danger">
+                    <i class="bi bi-x-circle"></i> Unable to connect to API. Please check your API key.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- API Endpoints -->
+<div class="card mb-4">
+    <div class="card-body">
+        <h5 class="card-title">API Endpoints</h5>
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th>Service</th>
+                    <th>Endpoint</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><i class="bi bi-cloud-haze"></i> Air Pollution</td>
+                    <td><code>{{ status.endpoints.air_pollution }}</code></td>
+                </tr>
+                <tr>
+                    <td><i class="bi bi-cloud-sun"></i> Weather Data</td>
+                    <td><code>{{ status.endpoints.weather }}</code></td>
+                </tr>
+                <tr>
+                    <td><i class="bi bi-geo-alt"></i> Geocoding</td>
+                    <td><code>{{ status.endpoints.geocoding }}</code></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Last API Response (if successful) -->
+{% if status.connection_test and status.last_response %}
+<div class="card mb-4">
+    <div class="card-body">
+        <h5 class="card-title">Last API Response</h5>
+        <div class="row text-center g-3">
+            <div class="col-md-3">
+                <div class="p-3 bg-light rounded">
+                    <i class="bi bi-wind text-danger" style="font-size: 2rem;"></i>
+                    <div class="h3 text-danger mt-2">{{ status.last_response.pm25 }}</div>
+                    <small class="text-muted">PM2.5 (µg/m³)</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="p-3 bg-light rounded">
+                    <i class="bi bi-cloud text-info" style="font-size: 2rem;"></i>
+                    <div class="h3 text-info mt-2">{{ status.last_response.pm10 }}</div>
+                    <small class="text-muted">PM10 (µg/m³)</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="p-3 bg-light rounded">
+                    <i class="bi bi-thermometer-half text-success" style="font-size: 2rem;"></i>
+                    <div class="h3 text-success mt-2">{{ status.last_response.temperature }}°C</div>
+                    <small class="text-muted">Temperature</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="p-3 bg-light rounded">
+                    <i class="bi bi-speedometer text-warning" style="font-size: 2rem;"></i>
+                    <div class="h3 text-warning mt-2">{{ status.last_response.aqi }}</div>
+                    <small class="text-muted">AQI Index</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Setup Instructions -->
+{% if not status.api_configured %}
+<div class="card border-warning">
+    <div class="card-body">
+        <h5 class="card-title"><i class="bi bi-info-circle"></i> How to Configure API</h5>
+        <ol>
+            <li>Go to <a href="https://openweathermap.org/api" target="_blank">OpenWeatherMap API</a></li>
+            <li>Click <strong>"Sign Up"</strong> and create a free account</li>
+            <li>Verify your email address</li>
+            <li>Go to your account's <strong>"API keys"</strong> section</li>
+            <li>Copy your API key</li>
+            <li>Open <code>config.py</code> in your project</li>
+            <li>Replace <code>'YOUR_API_KEY_HERE'</code> with your actual API key</li>
+            <li>Restart the Flask application</li>
+        </ol>
+        <div class="alert alert-info mt-3">
+            <strong>Note:</strong> It may take a few minutes for your API key to become active after creation.
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Dashboard - Smart City Monitor{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h2>Admin Dashboard</h2>
+        <hr />
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="card text-white bg-primary mb-3">
+            <div class="card-body">
+                <h5 class="card-title">Total Users</h5>
+                <p class="card-text display-6">{{ total_users }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-white bg-success mb-3">
+            <div class="card-body">
+                <h5 class="card-title">Total Zones</h5>
+                <p class="card-text display-6">{{ total_zones }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-white bg-warning mb-3">
+            <div class="card-body">
+                <h5 class="card-title">Total Readings</h5>
+                <p class="card-text display-6">{{ total_readings }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-3">
+    <div class="col-md-12">
+        <a href="{{ url_for('admin.manage_zones') }}" class="btn btn-outline-primary">Manage Zones</a>
+        <a href="{{ url_for('admin.admin_simulate') }}" class="btn btn-outline-success">Trigger Simulation</a>
+        <a href="{{ url_for('admin.admin_settings') }}" class="btn btn-outline-secondary">Settings</a>
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block title %}Settings - Admin{% endblock %}
+
+{% block content %}
+<h2>System Settings</h2>
+<hr />
+
+<form method="post" class="col-md-6">
+    <div class="mb-3">
+        <label class="form-label">PM2.5 Threshold (µg/m³)</label>
+        <input class="form-control" name="pm25_threshold" value="{{ settings.pm25_threshold }}" required />
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Noise Threshold (dB)</label>
+        <input class="form-control" name="noise_threshold" value="{{ settings.noise_threshold }}" required />
+    </div>
+    <button class="btn btn-primary">Save Settings</button>
+</form>
+
+{% endblock %}

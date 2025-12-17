@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+
+{% block title %}Zones & Data - Smart City Monitor{% endblock %}
+
+{% block content %}
+<!-- Page Header with Breadcrumb -->
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Overview</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Zones & Data</li>
+    </ol>
+</nav>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1><i class="bi bi-geo-alt"></i> Zones & Data</h1>
+        <p class="text-muted mb-0">Detailed zone-wise pollution readings and operational data</p>
+    </div>
+    <div>
+        <span class="badge bg-secondary fs-6">
+            {{ zone_data|length }} Active Zones
+        </span>
+    </div>
+</div>
+
+{% if zone_data %}
+
+<!-- Data Source Indicator -->
+<div class="alert alert-info py-2 mb-4">
+    <i class="bi bi-info-circle"></i>
+    <strong>Data Sources:</strong>
+    PM2.5/PM10: {% if realtime_sources.get('pm25') == 'api' %}Real-time API{% else %}Simulated{% endif %} |
+    Temperature: {% if realtime_sources.get('temperature') == 'api' %}Real-time API{% else %}Simulated{% endif %} |
+    Noise: Simulated (no public API available)
+</div>
+
+<!-- Zone Data Table -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="bi bi-table"></i> Zone-wise Pollution Data</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover table-striped align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Zone</th>
+                        <th>Description</th>
+                        <th class="text-center">PM2.5 (µg/m³)</th>
+                        <th class="text-center">PM10 (µg/m³)</th>
+                        <th class="text-center">Temperature (°C)</th>
+                        <th class="text-center">Noise (dB)</th>
+                        <th class="text-center">Trend</th>
+                        <th class="text-center">EPA Status</th>
+                        <th class="text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in zone_data %}
+                    <tr class="{% if item.epa_category == 'Unhealthy' %}table-danger{% elif item.epa_category == 'Moderate' %}table-warning{% endif %}">
+                        <td>
+                            <strong><i class="bi bi-pin-map"></i> {{ item.zone.name }}</strong>
+                        </td>
+                        <td>
+                            <small class="text-muted">{{ item.zone.description }}</small>
+                        </td>
+                        <td class="text-center">
+                            <span class="fw-bold">{{ item.reading.pm25 }}</span>
+                        </td>
+                        <td class="text-center">
+                            <span class="fw-bold">{{ item.reading.pm10 }}</span>
+                        </td>
+                        <td class="text-center">
+                            {{ item.reading.temperature }}
+                        </td>
+                        <td class="text-center">
+                            {{ item.reading.noise_level }}
+                        </td>
+                        <td class="text-center">
+                            {% if item.trend == 'Increasing' %}
+                                <span class="badge bg-danger">
+                                    <i class="bi bi-caret-up-fill"></i> {{ item.trend }}
+                                </span>
+                            {% elif item.trend == 'Decreasing' %}
+                                <span class="badge bg-success">
+                                    <i class="bi bi-caret-down-fill"></i> {{ item.trend }}
+                                </span>
+                            {% elif item.trend == 'Stable' %}
+                                <span class="badge bg-secondary">
+                                    <i class="bi bi-dash-lg"></i> {{ item.trend }}
+                                </span>
+                            {% else %}
+                                <span class="badge bg-light text-dark">{{ item.trend }}</span>
+                            {% endif %}
+                            {% if item.pm25_change_pct is not none %}
+                                <br><small class="text-muted">{{ item.pm25_change_pct }}%</small>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            <span class="badge {% if item.epa_category == 'Unhealthy' %}bg-danger{% elif item.epa_category == 'Moderate' %}bg-warning text-dark{% else %}bg-success{% endif %} p-2">
+                                {{ item.epa_category }}
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            <a href="{{ url_for('zone_detail', zone_id=item.zone.id) }}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-eye"></i> Details
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Zone Cards (Visual) -->
+<h4 class="mb-3"><i class="bi bi-grid-3x3-gap"></i> Zone Cards</h4>
+<div class="row g-3 mb-4">
+    {% for item in zone_data %}
+    <div class="col-lg-4 col-md-6">
+        <div class="card h-100 {% if item.epa_category == 'Unhealthy' %}border-danger{% elif item.epa_category == 'Moderate' %}border-warning{% elif item.epa_category == 'Good' %}border-success{% endif %}">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-pin-map"></i> {{ item.zone.name }}
+                    </h5>
+                    <span class="badge bg-{{ item.status.color }}">{{ item.status.level }}</span>
+                </div>
+                <p class="text-muted small mb-3">{{ item.zone.description }}</p>
+                
+                <div class="row text-center mb-3">
+                    <div class="col-6">
+                        <div class="h4 mb-0 text-primary">{{ item.reading.pm25 }}</div>
+                        <small class="text-muted">PM2.5 µg/m³</small>
+                    </div>
+                    <div class="col-6">
+                        <div class="h4 mb-0 text-info">{{ item.reading.pm10 }}</div>
+                        <small class="text-muted">PM10 µg/m³</small>
+                    </div>
+                </div>
+                
+                <div class="row text-center mb-3">
+                    <div class="col-6">
+                        <div class="h5 mb-0">{{ item.reading.temperature }}°C</div>
+                        <small class="text-muted">Temperature</small>
+                    </div>
+                    <div class="col-6">
+                        <div class="h5 mb-0">{{ item.reading.noise_level }} dB</div>
+                        <small class="text-muted">Noise</small>
+                    </div>
+                </div>
+                
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        {% if item.trend == 'Increasing' %}
+                            <span class="badge bg-danger"><i class="bi bi-caret-up-fill"></i> {{ item.trend }}</span>
+                        {% elif item.trend == 'Decreasing' %}
+                            <span class="badge bg-success"><i class="bi bi-caret-down-fill"></i> {{ item.trend }}</span>
+                        {% else %}
+                            <span class="badge bg-secondary"><i class="bi bi-dash-lg"></i> {{ item.trend }}</span>
+                        {% endif %}
+                    </div>
+                    <a href="{{ url_for('zone_detail', zone_id=item.zone.id) }}" class="btn btn-sm btn-primary">
+                        View Details <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+            <div class="card-footer text-muted small">
+                <i class="bi bi-clock"></i> {{ item.reading.timestamp.strftime('%Y-%m-%d %H:%M') }}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- EPA Legend -->
+<div class="card">
+    <div class="card-body py-2">
+        <div class="d-flex flex-wrap gap-3 align-items-center">
+            <strong>EPA Categories:</strong>
+            <span class="badge bg-success">Good: ≤ 12 µg/m³</span>
+            <span class="badge bg-warning text-dark">Moderate: 12–35 µg/m³</span>
+            <span class="badge bg-danger">Unhealthy: > 35 µg/m³</span>
+        </div>
+    </div>
+</div>
+
+{% else %}
+<div class="alert alert-info" role="alert">
+    <i class="bi bi-info-circle"></i> No zone data available yet. 
+    <a href="{{ url_for('simulate') }}" class="alert-link">Simulate data</a> to generate sample readings.
+</div>
+{% endif %}
+
+{% endblock %}

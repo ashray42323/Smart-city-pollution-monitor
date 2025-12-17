@@ -1,0 +1,314 @@
+{% extends "base.html" %}
+
+{% block title %}Overview - Smart City Monitor{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1><i class="bi bi-house-door"></i> Overview</h1>
+        <p class="text-muted mb-0">Executive summary of air quality across all monitored zones</p>
+    </div>
+    <div>
+        <span class="text-muted">
+            <i class="bi bi-clock"></i> Last updated: {{ zone_data[0].reading.timestamp.strftime('%Y-%m-%d %H:%M') if zone_data else 'N/A' }}
+        </span>
+    </div>
+</div>
+
+<!-- Alert Banner -->
+{% if alerts %}
+<div class="alert alert-danger alert-dismissible fade show" role="alert">
+    <h5 class="alert-heading"><i class="bi bi-exclamation-triangle-fill"></i> Air Quality Alert!</h5>
+    <p class="mb-0">
+        <strong>{{ alerts|length }} zone(s)</strong> have unhealthy pollution levels (PM2.5 > 35 µg/m³). 
+        Sensitive groups should limit outdoor activity.
+    </p>
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+{% endif %}
+
+{% if zone_data and stats %}
+
+<!-- Statistics & Insights Panel -->
+<div class="mb-4">
+    <h4 class="mb-3"><i class="bi bi-bar-chart-line"></i> Quick Statistics</h4>
+    <div class="row g-3">
+        
+        <!-- CARD 1: Air Quality Summary -->
+        <div class="col-lg-3 col-md-6">
+            <div class="card h-100 border-{{ stats.overall_epa_color }}">
+                <div class="card-body">
+                    <h6 class="card-subtitle mb-2 text-muted">
+                        <i class="bi bi-lungs"></i> Air Quality
+                    </h6>
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="me-3">
+                            <span class="display-6 fw-bold">{{ avg_pm25 }}</span>
+                            <small class="text-muted d-block">PM2.5 avg</small>
+                        </div>
+                        <div>
+                            <span class="display-6 fw-bold text-info">{{ avg_pm10 }}</span>
+                            <small class="text-muted d-block">PM10 avg</small>
+                        </div>
+                    </div>
+                    <span class="badge bg-{{ stats.overall_epa_color }} fs-6 p-2">
+                        {% if stats.overall_epa_status == 'Good' %}
+                            <i class="bi bi-check-circle-fill"></i>
+                        {% elif stats.overall_epa_status == 'Moderate' %}
+                            <i class="bi bi-exclamation-circle-fill"></i>
+                        {% else %}
+                            <i class="bi bi-x-circle-fill"></i>
+                        {% endif %}
+                        {{ stats.overall_epa_status }}
+                    </span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- CARD 2: Simulated vs Real-Time -->
+        <div class="col-lg-3 col-md-6">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h6 class="card-subtitle mb-2 text-muted">
+                        <i class="bi bi-arrow-left-right"></i> Simulated vs Real
+                    </h6>
+                    <div class="row text-center mb-2">
+                        <div class="col-5">
+                            <span class="h4 d-block mb-0">{{ stats.avg_sim_pm25 }}</span>
+                            <small class="text-muted">Simulated</small>
+                        </div>
+                        <div class="col-2 d-flex align-items-center justify-content-center">
+                            <span class="h3 text-{{ stats.comparison_color }} mb-0">{{ stats.comparison_icon }}</span>
+                        </div>
+                        <div class="col-5">
+                            <span class="h4 d-block mb-0">{{ stats.real_pm25 if stats.real_pm25 else 'N/A' }}</span>
+                            <small class="text-muted">Real-Time</small>
+                        </div>
+                    </div>
+                    {% if stats.comparison_diff_pct is not none %}
+                    <div class="text-center">
+                        <span class="badge bg-{{ stats.comparison_color }}">{{ stats.comparison_diff_pct }}% diff</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- CARD 3: Zone Trends -->
+        <div class="col-lg-3 col-md-6">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h6 class="card-subtitle mb-2 text-muted">
+                        <i class="bi bi-graph-up-arrow"></i> Zone Trends
+                    </h6>
+                    <div class="d-flex justify-content-around text-center">
+                        <div>
+                            <span class="h4 text-danger d-block mb-0">
+                                <i class="bi bi-caret-up-fill"></i> {{ stats.trend_counts.Increasing }}
+                            </span>
+                            <small class="text-muted">Up</small>
+                        </div>
+                        <div>
+                            <span class="h4 text-success d-block mb-0">
+                                <i class="bi bi-caret-down-fill"></i> {{ stats.trend_counts.Decreasing }}
+                            </span>
+                            <small class="text-muted">Down</small>
+                        </div>
+                        <div>
+                            <span class="h4 text-secondary d-block mb-0">
+                                <i class="bi bi-dash-lg"></i> {{ stats.trend_counts.Stable }}
+                            </span>
+                            <small class="text-muted">Stable</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- CARD 4: Alerts & Risk -->
+        <div class="col-lg-3 col-md-6">
+            <div class="card h-100 {% if stats.epa_counts.Unhealthy > 0 %}border-danger{% endif %}">
+                <div class="card-body">
+                    <h6 class="card-subtitle mb-2 text-muted">
+                        <i class="bi bi-shield-exclamation"></i> Risk Overview
+                    </h6>
+                    <div class="d-flex justify-content-around text-center">
+                        <div>
+                            <span class="badge bg-danger fs-5 p-2">{{ stats.epa_counts.Unhealthy }}</span>
+                            <small class="text-muted d-block">Unhealthy</small>
+                        </div>
+                        <div>
+                            <span class="badge bg-warning text-dark fs-5 p-2">{{ stats.epa_counts.Moderate }}</span>
+                            <small class="text-muted d-block">Moderate</small>
+                        </div>
+                        <div>
+                            <span class="badge bg-success fs-5 p-2">{{ stats.epa_counts.Good }}</span>
+                            <small class="text-muted d-block">Good</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+    </div>
+</div>
+
+<!-- Real-Time API Data Card -->
+{% if realtime_data and not realtime_data.error %}
+<div class="card mb-4 border-primary">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0"><i class="bi bi-cloud-sun"></i> Real-Time Data: {{ realtime_data.city }}</h5>
+    </div>
+    <div class="card-body">
+        <div class="row text-center">
+            <div class="col-md-3">
+                <div class="h3 text-primary mb-0">{{ realtime_data.pm25 if realtime_data.pm25 is not none else 'N/A' }}</div>
+                <small class="text-muted">PM2.5 (µg/m³)</small>
+                {% if realtime_sources.get('pm25') == 'api' %}
+                    <span class="badge bg-success">API</span>
+                {% else %}
+                    <span class="badge bg-secondary">Simulated</span>
+                {% endif %}
+            </div>
+            <div class="col-md-3">
+                <div class="h3 text-info mb-0">{{ realtime_data.pm10 if realtime_data.pm10 is not none else 'N/A' }}</div>
+                <small class="text-muted">PM10 (µg/m³)</small>
+                {% if realtime_sources.get('pm10') == 'api' %}
+                    <span class="badge bg-success">API</span>
+                {% else %}
+                    <span class="badge bg-secondary">Simulated</span>
+                {% endif %}
+            </div>
+            <div class="col-md-3">
+                <div class="h3 text-success mb-0">{{ realtime_data.temperature if realtime_data.temperature is not none else 'N/A' }}{% if realtime_data.temperature is not none %}°C{% endif %}</div>
+                <small class="text-muted">Temperature</small>
+                {% if realtime_sources.get('temperature') == 'api' %}
+                    <span class="badge bg-success">API</span>
+                {% else %}
+                    <span class="badge bg-secondary">Simulated</span>
+                {% endif %}
+            </div>
+            <div class="col-md-3">
+                <div class="h3 text-warning mb-0">{{ realtime_data.noise if realtime_data.noise is not none else 'N/A' }}{% if realtime_data.noise is not none %} dB{% endif %}</div>
+                <small class="text-muted">Noise</small>
+                <span class="badge bg-secondary">Simulated</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- KPI Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3 col-sm-6">
+        <div class="card metric-card text-center h-100">
+            <div class="card-body">
+                <i class="bi bi-wind text-danger" style="font-size: 2.5rem;"></i>
+                <h2 class="mt-2">{{ avg_pm25 }}</h2>
+                <h5 class="text-muted mb-0">Average PM2.5</h5>
+                <small class="text-muted">µg/m³</small>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 col-sm-6">
+        <div class="card metric-card text-center h-100">
+            <div class="card-body">
+                <i class="bi bi-cloud text-info" style="font-size: 2.5rem;"></i>
+                <h2 class="mt-2">{{ avg_pm10 }}</h2>
+                <h5 class="text-muted mb-0">Average PM10</h5>
+                <small class="text-muted">µg/m³</small>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 col-sm-6">
+        <div class="card metric-card text-center h-100">
+            <div class="card-body">
+                <i class="bi bi-arrow-up-circle text-danger" style="font-size: 2.5rem;"></i>
+                {% if highest_zone %}
+                <h2 class="mt-2">{{ highest_zone.reading.pm25 }}</h2>
+                <h5 class="text-muted mb-0">Highest Zone</h5>
+                <small class="text-muted">{{ highest_zone.zone.name }}</small>
+                {% else %}
+                <h2 class="mt-2">N/A</h2>
+                <h5 class="text-muted mb-0">No Data</h5>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 col-sm-6">
+        <div class="card metric-card text-center h-100">
+            <div class="card-body">
+                <i class="bi bi-arrow-down-circle text-success" style="font-size: 2.5rem;"></i>
+                {% if lowest_zone %}
+                <h2 class="mt-2">{{ lowest_zone.reading.pm25 }}</h2>
+                <h5 class="text-muted mb-0">Lowest Zone</h5>
+                <small class="text-muted">{{ lowest_zone.zone.name }}</small>
+                {% else %}
+                <h2 class="mt-2">N/A</h2>
+                <h5 class="text-muted mb-0">No Data</h5>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Navigation Cards -->
+<div class="row g-3">
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-bar-chart-line text-primary" style="font-size: 3rem;"></i>
+                <h4 class="mt-3">Statistics & Analytics</h4>
+                <p class="text-muted">View detailed charts, trend distributions, and EPA category breakdowns</p>
+                <a href="{{ url_for('statistics') }}" class="btn btn-primary">
+                    <i class="bi bi-arrow-right"></i> Go to Statistics
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-geo-alt text-info" style="font-size: 3rem;"></i>
+                <h4 class="mt-3">Zones & Data</h4>
+                <p class="text-muted">View zone-wise pollution data, tables, and detailed readings</p>
+                <a href="{{ url_for('zones_page') }}" class="btn btn-info text-white">
+                    <i class="bi bi-arrow-right"></i> Go to Zones
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- EPA Legend (compact) -->
+<div class="card mt-4">
+    <div class="card-body py-2 small">
+        <strong>EPA Air Quality Categories:</strong>
+        <span class="badge bg-success ms-2">Good: ≤ 12 µg/m³</span>
+        <span class="badge bg-warning text-dark ms-1">Moderate: 12–35 µg/m³</span>
+        <span class="badge bg-danger ms-1">Unhealthy: > 35 µg/m³</span>
+    </div>
+</div>
+
+{% else %}
+<div class="alert alert-info" role="alert">
+    <i class="bi bi-info-circle"></i> No pollution data available yet. 
+    <a href="{{ url_for('simulate') }}" class="alert-link">Simulate data</a> to generate sample readings.
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Initialize Bootstrap tooltips
+document.addEventListener('DOMContentLoaded', function () {
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.forEach(function (el) { new bootstrap.Tooltip(el); });
+});
+</script>
+{% endblock %}

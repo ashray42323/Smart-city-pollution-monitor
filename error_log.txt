@@ -1,0 +1,247 @@
+﻿python : Traceback 
+(most recent call 
+last):
+At line:1 char:1
++ python test_app.py 
+2>&1 | Out-File 
+-FilePath 
+error_log.txt 
+-Encoding  ...
++ ~~~~~~~~~~~~~~~~~~~
+~~~~
+    + CategoryInfo   
+           : NotSpe  
+  cified: (Traceba   
+ ck (most recent     
+call last)::Stri    
+ng) [], RemoteEx    
+ception
+    + FullyQualified 
+   ErrorId : Native  
+  CommandError
+ 
+  File "C:\Users\ashr
+a\AppData\Local\Progr
+ams\Python\Python312\
+Lib\site-packages\sql
+alchemy\engine\base.p
+y", line 1967, in 
+_exec_single_context
+    self.dialect.do_e
+xecute(
+  File "C:\Users\ashr
+a\AppData\Local\Progr
+ams\Python\Python312\
+Lib\site-packages\sql
+alchemy\engine\defaul
+t.py", line 951, in 
+do_execute
+    cursor.execute(st
+atement, parameters)
+sqlite3.OperationalEr
+ror: no such column: 
+zones.created_at
+
+The above exception 
+was the direct cause 
+of the following 
+exception:
+
+Traceback (most 
+recent call last):
+  File "D:\Courses\sm
+art-city2-pollution-m
+onitor\test_app.py", 
+line 11, in <module>
+    app = 
+create_app()
+          
+^^^^^^^^^^^^
+  File "D:\Courses\sm
+art-city2-pollution-m
+onitor\app\__init__.p
+y", line 63, in 
+create_app
+    _ensure_default_d
+ata(app)
+  File "D:\Courses\sm
+art-city2-pollution-m
+onitor\app\__init__.p
+y", line 106, in 
+_ensure_default_data
+    existing = 
+Zone.query.all()
+               
+^^^^^^^^^^^^^^^^
+  File "C:\Users\ashr
+a\AppData\Local\Progr
+ams\Python\Python312\
+Lib\site-packages\sql
+alchemy\orm\query.py"
+, line 2704, in all
+    return 
+self._iter().all()  
+# type: ignore
+           
+^^^^^^^^^^^^
+  File "C:\Users\ashr
+a\AppData\Local\Progr
+ams\Python\Python312\
+Lib\site-packages\sql
+alchemy\orm\query.py"
+, line 2857, in _iter
+    result: Union[Sca
+larResult[_T], 
+Result[_T]] = 
+self.session.execute(
+                     
+                     
+        
+^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ashr
+a\AppData\Local\Progr
+ams\Python\Python312\
+Lib\site-packages\sql
+alchemy\orm\session.p
+y", line 2351, in 
+execute
+    return self._exec
+ute_internal(
+           ^^^^^^^^^^
+^^^^^^^^^^^^^
+  File "C:\Users\ashr
+a\AppData\Local\Progr
+ams\Python\Python312\
+Lib\site-packages\sql
+alchemy\orm\session.p
+y", line 2249, in 
+_execute_internal
+    result: 
+Result[Any] = compile
+_state_cls.orm_execut
+e_statement(
+                     
+     ^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^
+^^^
+  File "C:\Users\ashr
+a\AppData\Local\Progr
+ams\Python\Python312\
+Lib\site-packages\sql
+alchemy\orm\context.p
+y", line 306, in 
+orm_execute_statement
+    result = 
+conn.execute(
+             
+^^^^^^^^^^^^^
+  File "C:\Users\ashr
+a\AppData\Local\Progr
+ams\Python\Python312\
+Lib\site-packages\sql
+alchemy\engine\base.p
+y", line 1419, in 
+execute
+    return meth(
+           ^^^^^
+  File "C:\Users\ashr
+a\AppData\Local\Progr
+ams\Python\Python312\
+Lib\site-packages\sql
+alchemy\sql\elements.
+py", line 526, in _ex
+ecute_on_connection
+    return connection
+._execute_clauseeleme
+nt(
+           ^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^
+^^^
+  File "C:\Users\ashr
+a\AppData\Local\Progr
+ams\Python\Python312\
+Lib\site-packages\sql
+alchemy\engine\base.p
+y", line 1641, in _ex
+ecute_clauseelement
+    ret = self._execu
+te_context(
+          ^^^^^^^^^^^
+^^^^^^^^^^^
+  File "C:\Users\ashr
+a\AppData\Local\Progr
+ams\Python\Python312\
+Lib\site-packages\sql
+alchemy\engine\base.p
+y", line 1846, in 
+_execute_context
+    return self._exec
+_single_context(
+           ^^^^^^^^^^
+^^^^^^^^^^^^^^^^
+  File "C:\Users\ashr
+a\AppData\Local\Progr
+ams\Python\Python312\
+Lib\site-packages\sql
+alchemy\engine\base.p
+y", line 1986, in 
+_exec_single_context
+    self._handle_dbap
+i_exception(
+  File "C:\Users\ashr
+a\AppData\Local\Progr
+ams\Python\Python312\
+Lib\site-packages\sql
+alchemy\engine\base.p
+y", line 2355, in _ha
+ndle_dbapi_exception
+    raise sqlalchemy_
+exception.with_traceb
+ack(exc_info[2]) 
+from e
+  File "C:\Users\ashr
+a\AppData\Local\Progr
+ams\Python\Python312\
+Lib\site-packages\sql
+alchemy\engine\base.p
+y", line 1967, in 
+_exec_single_context
+    self.dialect.do_e
+xecute(
+  File "C:\Users\ashr
+a\AppData\Local\Progr
+ams\Python\Python312\
+Lib\site-packages\sql
+alchemy\engine\defaul
+t.py", line 951, in 
+do_execute
+    cursor.execute(st
+atement, parameters)
+sqlalchemy.exc.Operat
+ionalError: (sqlite3.
+OperationalError) no 
+such column: 
+zones.created_at
+[SQL: SELECT 
+zones.id AS 
+zones_id, zones.name 
+AS zones_name, 
+zones.description AS 
+zones_description, 
+zones.latitude AS 
+zones_latitude, 
+zones.longitude AS 
+zones_longitude, 
+zones.created_at AS 
+zones_created_at 
+FROM zones]
+(Background on this 
+error at: https://sql
+alche.me/e/20/e3q8)
+Attempting to import create_app...
+create_app imported successfully
+Attempting to create app...
+============================================================
+ERROR OCCURRED:
+============================================================
+============================================================
