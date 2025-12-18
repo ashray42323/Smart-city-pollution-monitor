@@ -13,7 +13,7 @@
                     <p class="text-muted">Login to Smart City Pollution Monitor</p>
                 </div>
 
-                <form method="POST" action="{{ url_for('login') }}">
+                <form method="POST" action="{{ url_for('auth.login') }}">
                     <div class="mb-3">
                         <label for="username" class="form-label">Username</label>
                         <div class="input-group">
@@ -54,7 +54,7 @@
 
                 <div class="text-center">
                     <p class="mb-0">Don't have an account? 
-                        <a href="{{ url_for('register') }}" class="text-decoration-none">
+                        <a href="{{ url_for('auth.register') }}" class="text-decoration-none">
                             Register here
                         </a>
                     </p>

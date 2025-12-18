@@ -6,7 +6,7 @@
 <!-- Page Header with Breadcrumb -->
 <nav aria-label="breadcrumb" class="mb-3">
     <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Overview</a></li>
+        <li class="breadcrumb-item"><a href="{{ url_for('dashboard.dashboard') }}">Overview</a></li>
         <li class="breadcrumb-item active" aria-current="page">Zones & Data</li>
     </ol>
 </nav>
@@ -102,7 +102,7 @@
                             </span>
                         </td>
                         <td class="text-center">
-                            <a href="{{ url_for('zone_detail', zone_id=item.zone.id) }}" class="btn btn-sm btn-outline-primary">
+                            <a href="{{ url_for('dashboard.zone_detail', zone_id=item.zone.id) }}" class="btn btn-sm btn-outline-primary">
                                 <i class="bi bi-eye"></i> Details
                             </a>
                         </td>
@@ -161,7 +161,7 @@
                             <span class="badge bg-secondary"><i class="bi bi-dash-lg"></i> {{ item.trend }}</span>
                         {% endif %}
                     </div>
-                    <a href="{{ url_for('zone_detail', zone_id=item.zone.id) }}" class="btn btn-sm btn-primary">
+                    <a href="{{ url_for('dashboard.zone_detail', zone_id=item.zone.id) }}" class="btn btn-sm btn-primary">
                         View Details <i class="bi bi-arrow-right"></i>
                     </a>
                 </div>
@@ -189,7 +189,7 @@
 {% else %}
 <div class="alert alert-info" role="alert">
     <i class="bi bi-info-circle"></i> No zone data available yet. 
-    <a href="{{ url_for('simulate') }}" class="alert-link">Simulate data</a> to generate sample readings.
+    <a href="{{ url_for('dashboard.simulate') }}" class="alert-link">Simulate data</a> to generate sample readings.
 </div>
 {% endif %}
 

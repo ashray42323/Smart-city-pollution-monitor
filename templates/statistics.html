@@ -6,7 +6,7 @@
 <!-- Page Header with Breadcrumb -->
 <nav aria-label="breadcrumb" class="mb-3">
     <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Overview</a></li>
+        <li class="breadcrumb-item"><a href="{{ url_for('dashboard.dashboard') }}">Overview</a></li>
         <li class="breadcrumb-item active" aria-current="page">Statistics & Insights</li>
     </ol>
 </nav>
@@ -161,7 +161,7 @@
                                 <h4>{{ highest_zone.zone.name }}</h4>
                                 <p class="text-muted">{{ highest_zone.zone.description }}</p>
                                 <span class="badge bg-{{ highest_zone.status.color }} p-2">{{ highest_zone.status.level }}</span>
-                                <a href="{{ url_for('zone_detail', zone_id=highest_zone.zone.id) }}" class="btn btn-outline-danger btn-sm mt-3">
+                                <a href="{{ url_for('dashboard.zone_detail', zone_id=highest_zone.zone.id) }}" class="btn btn-outline-danger btn-sm mt-3">
                                     View Details <i class="bi bi-arrow-right"></i>
                                 </a>
                             </div>
@@ -178,7 +178,7 @@
                                 <h4>{{ lowest_zone.zone.name }}</h4>
                                 <p class="text-muted">{{ lowest_zone.zone.description }}</p>
                                 <span class="badge bg-{{ lowest_zone.status.color }} p-2">{{ lowest_zone.status.level }}</span>
-                                <a href="{{ url_for('zone_detail', zone_id=lowest_zone.zone.id) }}" class="btn btn-outline-success btn-sm mt-3">
+                                <a href="{{ url_for('dashboard.zone_detail', zone_id=lowest_zone.zone.id) }}" class="btn btn-outline-success btn-sm mt-3">
                                     View Details <i class="bi bi-arrow-right"></i>
                                 </a>
                             </div>
@@ -218,7 +218,7 @@
 {% else %}
 <div class="alert alert-info" role="alert">
     <i class="bi bi-info-circle"></i> No pollution data available yet. 
-    <a href="{{ url_for('simulate') }}" class="alert-link">Simulate data</a> to generate sample readings.
+    <a href="{{ url_for('dashboard.simulate') }}" class="alert-link">Simulate data</a> to generate sample readings.
 </div>
 {% endif %}
 

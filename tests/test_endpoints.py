@@ -155,3 +155,65 @@ def test_test_admin_route(client):
     assert r.status_code == 200
     data = r.get_json()
     assert 'is_admin' in data
+
+
+def test_compare_zones_requires_login(client):
+    """Test that compare-zones page requires authentication"""
+    r = client.get('/compare-zones')
+    assert r.status_code in (301, 302)
+
+
+def test_compare_zones_page_loads(client, ensure_test_user, monkeypatch):
+    """Test that compare-zones page loads with zone dropdowns"""
+    # Patch external API calls
+    def fake_realtime(city):
+        return {'error': False, 'city': city, 'pm25': 25.0, 'pm10': 40.0, 'temperature': 20.0, 'noise': 60.0}
+    
+    monkeypatch.setattr('app.get_realtime_open_meteo', fake_realtime)
+    
+    # Login
+    client.post('/login', data={'username': 'testuser', 'password': 'testpass'}, follow_redirects=True)
+    
+    # Access compare zones page
+    r = client.get('/compare-zones')
+    assert r.status_code == 200
+    body = r.get_data(as_text=True)
+    
+    # Check page elements
+    assert 'Zone Comparison' in body
+    assert 'Select Zones to Compare' in body
+    assert 'zone1_id' in body
+    assert 'zone2_id' in body
+
+
+def test_compare_zones_with_selection(client, ensure_test_user, monkeypatch):
+    """Test compare-zones page with two zones selected shows comparison"""
+    # Patch external API calls
+    def fake_realtime(location):
+        return {'error': False, 'pm25': 30.0, 'pm10': 50.0, 'temperature': 22.0, 'noise': 65.0}
+    
+    monkeypatch.setattr('app.get_realtime_open_meteo', fake_realtime)
+    
+    # Login
+    client.post('/login', data={'username': 'testuser', 'password': 'testpass'}, follow_redirects=True)
+    
+    # Get zones from database
+    from models import Zone
+    zones = Zone.query.limit(2).all()
+    if len(zones) >= 2:
+        zone1_id = zones[0].id
+        zone2_id = zones[1].id
+        
+        # Access compare zones with both selected
+        r = client.get(f'/compare-zones?zone1_id={zone1_id}&zone2_id={zone2_id}')
+        assert r.status_code == 200
+        body = r.get_data(as_text=True)
+        
+        # Check comparison elements are present
+        assert 'Detailed Metric Comparison' in body
+        assert 'PM2.5' in body
+        assert 'PM10' in body
+        assert 'Temperature' in body
+        assert 'Noise Level' in body
+        assert 'EPA Air Quality Index Legend' in body
+

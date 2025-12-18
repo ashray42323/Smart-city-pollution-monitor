@@ -45,6 +45,11 @@
                             </a>
                         </li>
                         <li class="nav-item">
+                            <a class="nav-link {% if request.endpoint == 'dashboard.compare_zones' %}active{% endif %}" href="{{ url_for('dashboard.compare_zones') }}">
+                                <i class="bi bi-arrow-left-right"></i> Compare
+                            </a>
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link {% if request.endpoint == 'dashboard.zones_page' %}active{% endif %}" href="{{ url_for('dashboard.zones_page') }}">
                                 <i class="bi bi-geo-alt"></i> Zones
                             </a>

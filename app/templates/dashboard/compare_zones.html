@@ -1,0 +1,423 @@
+{% extends "base.html" %}
+
+{% block title %}Zone Comparison - Smart City Monitor{% endblock %}
+
+{% block content %}
+<!-- Page Header with Breadcrumb -->
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{{ url_for('dashboard.dashboard') }}">Overview</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Zone Comparison</li>
+    </ol>
+</nav>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1><i class="bi bi-arrow-left-right"></i> Zone Comparison</h1>
+        <p class="text-muted mb-0">Compare pollution metrics between two zones</p>
+    </div>
+</div>
+
+<!-- Zone Selection Form -->
+<div class="card mb-4">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0"><i class="bi bi-geo-alt"></i> Select Zones to Compare</h5>
+    </div>
+    <div class="card-body">
+        <form method="GET" action="{{ url_for('dashboard.compare_zones') }}" class="row g-3 align-items-end">
+            <div class="col-md-5">
+                <label for="zone1_id" class="form-label fw-bold">
+                    <i class="bi bi-1-circle text-primary"></i> First Zone
+                </label>
+                <select class="form-select form-select-lg" name="zone1_id" id="zone1_id" required>
+                    <option value="">-- Select Zone --</option>
+                    {% for zone in zones %}
+                    <option value="{{ zone.id }}" {% if zone1_id == zone.id %}selected{% endif %}>
+                        {{ zone.name }} {% if zone.description %}({{ zone.description }}){% endif %}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-5">
+                <label for="zone2_id" class="form-label fw-bold">
+                    <i class="bi bi-2-circle text-danger"></i> Second Zone
+                </label>
+                <select class="form-select form-select-lg" name="zone2_id" id="zone2_id" required>
+                    <option value="">-- Select Zone --</option>
+                    {% for zone in zones %}
+                    <option value="{{ zone.id }}" {% if zone2_id == zone.id %}selected{% endif %}>
+                        {{ zone.name }} {% if zone.description %}({{ zone.description }}){% endif %}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary btn-lg w-100">
+                    <i class="bi bi-arrow-repeat"></i> Compare
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if comparison %}
+<!-- Comparison Results -->
+<div class="row mb-4">
+    <!-- Zone 1 Summary Card -->
+    <div class="col-md-6 mb-3">
+        <div class="card h-100 {% if comparison.overall_worse == 1 %}border-danger{% elif comparison.overall_better == 1 %}border-success{% endif %}">
+            <div class="card-header {% if comparison.overall_worse == 1 %}bg-danger text-white{% elif comparison.overall_better == 1 %}bg-success text-white{% else %}bg-secondary text-white{% endif %}">
+                <h5 class="mb-0">
+                    <i class="bi bi-1-circle"></i> {{ zone1_data.zone.name }}
+                    {% if comparison.overall_worse == 1 %}
+                    <span class="badge bg-light text-danger float-end">More Polluted ↑</span>
+                    {% elif comparison.overall_better == 1 %}
+                    <span class="badge bg-light text-success float-end">Cleaner ↓</span>
+                    {% endif %}
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted mb-3">{{ zone1_data.zone.description }}</p>
+                
+                <!-- EPA Status Badge -->
+                <div class="mb-3">
+                    <span class="badge bg-{{ zone1_data.epa_color }} fs-6 p-2">
+                        EPA: {{ zone1_data.epa_category }}
+                    </span>
+                    {% if not zone1_data.has_data %}
+                    <span class="badge bg-warning text-dark ms-2" data-bs-toggle="tooltip" 
+                          title="No sensor data available. Using simulated values.">
+                        <i class="bi bi-exclamation-triangle"></i> Simulated
+                    </span>
+                    {% endif %}
+                </div>
+                
+                <!-- Metric Values -->
+                <div class="row text-center">
+                    <div class="col-6 mb-3">
+                        <div class="p-2 rounded {% if comparison.pm25.worse_zone == 1 %}bg-danger bg-opacity-10{% else %}bg-success bg-opacity-10{% endif %}">
+                            <span class="h4 {% if comparison.pm25.worse_zone == 1 %}text-danger{% else %}text-success{% endif %}">
+                                {{ zone1_data.pm25 }}
+                            </span>
+                            <br><small class="text-muted">PM2.5 (µg/m³)</small>
+                        </div>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <div class="p-2 rounded {% if comparison.pm10.worse_zone == 1 %}bg-danger bg-opacity-10{% else %}bg-success bg-opacity-10{% endif %}">
+                            <span class="h4 {% if comparison.pm10.worse_zone == 1 %}text-danger{% else %}text-success{% endif %}">
+                                {{ zone1_data.pm10 }}
+                            </span>
+                            <br><small class="text-muted">PM10 (µg/m³)</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="p-2 rounded {% if comparison.temperature.worse_zone == 1 %}bg-warning bg-opacity-10{% else %}bg-info bg-opacity-10{% endif %}">
+                            <span class="h4 {% if comparison.temperature.worse_zone == 1 %}text-warning{% else %}text-info{% endif %}">
+                                {{ zone1_data.temperature }}°C
+                            </span>
+                            <br><small class="text-muted">Temperature</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="p-2 rounded {% if comparison.noise.worse_zone == 1 %}bg-danger bg-opacity-10{% else %}bg-success bg-opacity-10{% endif %}">
+                            <span class="h4 {% if comparison.noise.worse_zone == 1 %}text-danger{% else %}text-success{% endif %}">
+                                {{ zone1_data.noise }} dB
+                            </span>
+                            <br><small class="text-muted">Noise Level</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer text-muted small">
+                <i class="bi bi-clock"></i> {{ zone1_data.timestamp.strftime('%Y-%m-%d %H:%M') if zone1_data.timestamp else 'N/A' }}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Zone 2 Summary Card -->
+    <div class="col-md-6 mb-3">
+        <div class="card h-100 {% if comparison.overall_worse == 2 %}border-danger{% elif comparison.overall_better == 2 %}border-success{% endif %}">
+            <div class="card-header {% if comparison.overall_worse == 2 %}bg-danger text-white{% elif comparison.overall_better == 2 %}bg-success text-white{% else %}bg-secondary text-white{% endif %}">
+                <h5 class="mb-0">
+                    <i class="bi bi-2-circle"></i> {{ zone2_data.zone.name }}
+                    {% if comparison.overall_worse == 2 %}
+                    <span class="badge bg-light text-danger float-end">More Polluted ↑</span>
+                    {% elif comparison.overall_better == 2 %}
+                    <span class="badge bg-light text-success float-end">Cleaner ↓</span>
+                    {% endif %}
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted mb-3">{{ zone2_data.zone.description }}</p>
+                
+                <!-- EPA Status Badge -->
+                <div class="mb-3">
+                    <span class="badge bg-{{ zone2_data.epa_color }} fs-6 p-2">
+                        EPA: {{ zone2_data.epa_category }}
+                    </span>
+                    {% if not zone2_data.has_data %}
+                    <span class="badge bg-warning text-dark ms-2" data-bs-toggle="tooltip" 
+                          title="No sensor data available. Using simulated values.">
+                        <i class="bi bi-exclamation-triangle"></i> Simulated
+                    </span>
+                    {% endif %}
+                </div>
+                
+                <!-- Metric Values -->
+                <div class="row text-center">
+                    <div class="col-6 mb-3">
+                        <div class="p-2 rounded {% if comparison.pm25.worse_zone == 2 %}bg-danger bg-opacity-10{% else %}bg-success bg-opacity-10{% endif %}">
+                            <span class="h4 {% if comparison.pm25.worse_zone == 2 %}text-danger{% else %}text-success{% endif %}">
+                                {{ zone2_data.pm25 }}
+                            </span>
+                            <br><small class="text-muted">PM2.5 (µg/m³)</small>
+                        </div>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <div class="p-2 rounded {% if comparison.pm10.worse_zone == 2 %}bg-danger bg-opacity-10{% else %}bg-success bg-opacity-10{% endif %}">
+                            <span class="h4 {% if comparison.pm10.worse_zone == 2 %}text-danger{% else %}text-success{% endif %}">
+                                {{ zone2_data.pm10 }}
+                            </span>
+                            <br><small class="text-muted">PM10 (µg/m³)</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="p-2 rounded {% if comparison.temperature.worse_zone == 2 %}bg-warning bg-opacity-10{% else %}bg-info bg-opacity-10{% endif %}">
+                            <span class="h4 {% if comparison.temperature.worse_zone == 2 %}text-warning{% else %}text-info{% endif %}">
+                                {{ zone2_data.temperature }}°C
+                            </span>
+                            <br><small class="text-muted">Temperature</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="p-2 rounded {% if comparison.noise.worse_zone == 2 %}bg-danger bg-opacity-10{% else %}bg-success bg-opacity-10{% endif %}">
+                            <span class="h4 {% if comparison.noise.worse_zone == 2 %}text-danger{% else %}text-success{% endif %}">
+                                {{ zone2_data.noise }} dB
+                            </span>
+                            <br><small class="text-muted">Noise Level</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer text-muted small">
+                <i class="bi bi-clock"></i> {{ zone2_data.timestamp.strftime('%Y-%m-%d %H:%M') if zone2_data.timestamp else 'N/A' }}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Detailed Comparison Table -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="bi bi-table"></i> Detailed Metric Comparison</h5>
+    </div>
+    <div class="card-body">
+        <table class="table table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Metric</th>
+                    <th class="text-center">{{ zone1_data.zone.name }}</th>
+                    <th class="text-center">Difference</th>
+                    <th class="text-center">{{ zone2_data.zone.name }}</th>
+                    <th class="text-center">Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- PM2.5 Row -->
+                <tr>
+                    <td>
+                        <strong>PM2.5</strong>
+                        <i class="bi bi-info-circle text-muted" data-bs-toggle="tooltip" 
+                           title="Fine particulate matter. Higher = worse air quality."></i>
+                        <br><small class="text-muted">µg/m³</small>
+                    </td>
+                    <td class="text-center {% if comparison.pm25.worse_zone == 1 %}table-danger{% elif comparison.pm25.worse_zone == 2 %}table-success{% endif %}">
+                        <span class="h5">{{ zone1_data.pm25 }}</span>
+                    </td>
+                    <td class="text-center">
+                        <span class="badge bg-secondary">{{ comparison.pm25.abs_diff }}</span>
+                        <br><small class="text-muted">{{ comparison.pm25.pct_diff }}% diff</small>
+                    </td>
+                    <td class="text-center {% if comparison.pm25.worse_zone == 2 %}table-danger{% elif comparison.pm25.worse_zone == 1 %}table-success{% endif %}">
+                        <span class="h5">{{ zone2_data.pm25 }}</span>
+                    </td>
+                    <td class="text-center">
+                        {% if comparison.pm25.worse_zone == 1 %}
+                        <span class="badge bg-danger"><i class="bi bi-arrow-left"></i> Worse</span>
+                        {% elif comparison.pm25.worse_zone == 2 %}
+                        <span class="badge bg-danger">Worse <i class="bi bi-arrow-right"></i></span>
+                        {% else %}
+                        <span class="badge bg-secondary">Equal</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                
+                <!-- PM10 Row -->
+                <tr>
+                    <td>
+                        <strong>PM10</strong>
+                        <i class="bi bi-info-circle text-muted" data-bs-toggle="tooltip" 
+                           title="Coarse particulate matter. Higher = worse air quality."></i>
+                        <br><small class="text-muted">µg/m³</small>
+                    </td>
+                    <td class="text-center {% if comparison.pm10.worse_zone == 1 %}table-danger{% elif comparison.pm10.worse_zone == 2 %}table-success{% endif %}">
+                        <span class="h5">{{ zone1_data.pm10 }}</span>
+                    </td>
+                    <td class="text-center">
+                        <span class="badge bg-secondary">{{ comparison.pm10.abs_diff }}</span>
+                        <br><small class="text-muted">{{ comparison.pm10.pct_diff }}% diff</small>
+                    </td>
+                    <td class="text-center {% if comparison.pm10.worse_zone == 2 %}table-danger{% elif comparison.pm10.worse_zone == 1 %}table-success{% endif %}">
+                        <span class="h5">{{ zone2_data.pm10 }}</span>
+                    </td>
+                    <td class="text-center">
+                        {% if comparison.pm10.worse_zone == 1 %}
+                        <span class="badge bg-danger"><i class="bi bi-arrow-left"></i> Worse</span>
+                        {% elif comparison.pm10.worse_zone == 2 %}
+                        <span class="badge bg-danger">Worse <i class="bi bi-arrow-right"></i></span>
+                        {% else %}
+                        <span class="badge bg-secondary">Equal</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                
+                <!-- Temperature Row -->
+                <tr>
+                    <td>
+                        <strong>Temperature</strong>
+                        <i class="bi bi-info-circle text-muted" data-bs-toggle="tooltip" 
+                           title="Values far from 20-24°C are flagged."></i>
+                        <br><small class="text-muted">°C</small>
+                    </td>
+                    <td class="text-center {% if comparison.temperature.worse_zone == 1 %}table-warning{% endif %}">
+                        <span class="h5">{{ zone1_data.temperature }}</span>
+                    </td>
+                    <td class="text-center">
+                        <span class="badge bg-secondary">{{ comparison.temperature.abs_diff }}</span>
+                        <br><small class="text-muted">{{ comparison.temperature.pct_diff }}% diff</small>
+                    </td>
+                    <td class="text-center {% if comparison.temperature.worse_zone == 2 %}table-warning{% endif %}">
+                        <span class="h5">{{ zone2_data.temperature }}</span>
+                    </td>
+                    <td class="text-center">
+                        {% if comparison.temperature.worse_zone == 1 %}
+                        <span class="badge bg-warning text-dark"><i class="bi bi-arrow-left"></i> Less Comfortable</span>
+                        {% elif comparison.temperature.worse_zone == 2 %}
+                        <span class="badge bg-warning text-dark">Less Comfortable <i class="bi bi-arrow-right"></i></span>
+                        {% else %}
+                        <span class="badge bg-secondary">Equal</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                
+                <!-- Noise Row -->
+                <tr>
+                    <td>
+                        <strong>Noise Level</strong>
+                        <i class="bi bi-info-circle text-muted" data-bs-toggle="tooltip" 
+                           title="Higher values = louder environment."></i>
+                        <br><small class="text-muted">dB</small>
+                    </td>
+                    <td class="text-center {% if comparison.noise.worse_zone == 1 %}table-danger{% elif comparison.noise.worse_zone == 2 %}table-success{% endif %}">
+                        <span class="h5">{{ zone1_data.noise }}</span>
+                    </td>
+                    <td class="text-center">
+                        <span class="badge bg-secondary">{{ comparison.noise.abs_diff }}</span>
+                        <br><small class="text-muted">{{ comparison.noise.pct_diff }}% diff</small>
+                    </td>
+                    <td class="text-center {% if comparison.noise.worse_zone == 2 %}table-danger{% elif comparison.noise.worse_zone == 1 %}table-success{% endif %}">
+                        <span class="h5">{{ zone2_data.noise }}</span>
+                    </td>
+                    <td class="text-center">
+                        {% if comparison.noise.worse_zone == 1 %}
+                        <span class="badge bg-danger"><i class="bi bi-arrow-left"></i> Louder</span>
+                        {% elif comparison.noise.worse_zone == 2 %}
+                        <span class="badge bg-danger">Louder <i class="bi bi-arrow-right"></i></span>
+                        {% else %}
+                        <span class="badge bg-secondary">Equal</span>
+                        {% endif %}
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- EPA Legend -->
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="bi bi-book"></i> EPA Air Quality Index Legend</h6>
+            </div>
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-2">
+                    <span class="badge bg-success me-2 p-2">Good</span>
+                    <small class="text-muted">PM2.5 ≤ 12 µg/m³ - Air quality is satisfactory</small>
+                </div>
+                <div class="d-flex align-items-center mb-2">
+                    <span class="badge bg-warning text-dark me-2 p-2">Moderate</span>
+                    <small class="text-muted">PM2.5 12–35 µg/m³ - Acceptable for most</small>
+                </div>
+                <div class="d-flex align-items-center">
+                    <span class="badge bg-danger me-2 p-2">Unhealthy</span>
+                    <small class="text-muted">PM2.5 > 35 µg/m³ - Health effects possible</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="bi bi-question-circle"></i> Understanding the Comparison</h6>
+            </div>
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-2">
+                    <span class="badge bg-danger me-2"><i class="bi bi-arrow-left"></i> / <i class="bi bi-arrow-right"></i></span>
+                    <small class="text-muted">Arrow points to the zone with <strong>worse</strong> value</small>
+                </div>
+                <div class="d-flex align-items-center mb-2">
+                    <span class="badge bg-secondary me-2">% diff</span>
+                    <small class="text-muted">% difference between the two zones</small>
+                </div>
+                <div class="d-flex align-items-center">
+                    <span class="badge bg-success me-2">Green</span>
+                    <span class="badge bg-danger me-2">Red</span>
+                    <small class="text-muted">Green = better, Red = worse</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% elif zone1_id or zone2_id %}
+<!-- Partial selection message -->
+<div class="alert alert-warning" role="alert">
+    <i class="bi bi-exclamation-triangle"></i> 
+    Please select <strong>both</strong> zones to see the comparison.
+</div>
+{% else %}
+<!-- No selection - instructions -->
+<div class="card">
+    <div class="card-body text-center py-5">
+        <i class="bi bi-arrow-left-right text-muted" style="font-size: 4rem;"></i>
+        <h4 class="mt-3 text-muted">Select Two Zones to Compare</h4>
+        <p class="text-muted">
+            Use the dropdowns above to select two different zones.<br>
+            You'll see a detailed comparison of PM2.5, PM10, temperature, and noise levels.
+        </p>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Initialize Bootstrap tooltips
+document.addEventListener('DOMContentLoaded', function() {
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function (el) { return new bootstrap.Tooltip(el); });
+});
+</script>
+{% endblock %}
